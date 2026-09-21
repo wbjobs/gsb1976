@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重试 · 退避 · 熔断 · 半开 可视化</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>重试 / 指数退避 / 熔断 / 半开 可视化</h1>
+  <div id="stateBadge" class="badge">闭合 CLOSED</div>
+</header>
+
+<main>
+  <section class="panel controls">
+    <h2>控制面板</h2>
+    <div class="grid">
+      <label>请求模式
+        <select id="cfgMode">
+          <option value="simulate" selected>模拟故障（离线可演示）</option>
+          <option value="fetch">真实 Fetch 请求</option>
+        </select>
+      </label>
+      <label id="fetchFields" style="display:none">目标 URL
+        <input id="cfgUrl" type="text" value="https://httpbin.org/status/200">
+      </label>
+      <span id="simulateFields" class="inline-fields">
+        <label>故障剧本
+          <select id="cfgFault">
+            <option value="outage_then_recover" selected>宕机后恢复（演示完整熔断循环）</option>
+            <option value="flaky">随机抖动</option>
+            <option value="always_fail">持续故障</option>
+            <option value="slow">响应超时</option>
+          </select>
+        </label>
+        <label>失败率 %
+          <input id="cfgFailRate" type="number" value="70" min="1" max="100">
+        </label>
+        <label>宕机时长 ms
+          <input id="cfgOutage" type="number" value="8000" min="1000" step="500">
+        </label>
+      </span>
+      <label>最大重试次数
+        <input id="cfgMaxRetries" type="number" value="4" min="0" max="10">
+      </label>
+      <label>退避基数 ms
+        <input id="cfgBaseDelay" type="number" value="200" min="10" step="10">
+      </label>
+      <label>退避上限 ms
+        <input id="cfgMaxDelay" type="number" value="4000" min="100" step="100">
+      </label>
+      <label>熔断阈值（连续失败）
+        <input id="cfgThreshold" type="number" value="5" min="1" max="50">
+      </label>
+      <label>冷却时长 ms（OPEN→半开）
+        <input id="cfgResetTimeout" type="number" value="5000" min="500" step="500">
+      </label>
+      <label>负载 QPS
+        <input id="cfgQps" type="number" value="2" min="1" max="20">
+      </label>
+    </div>
+    <div class="buttons">
+      <button id="btnStart" class="primary">▶ 启动负载</button>
+      <button id="btnStop">⏸ 停止</button>
+      <button id="btnSingle">单次调用</button>
+      <button id="btnReset" class="danger">↺ 重置</button>
+    </div>
+  </section>
+
+  <section class="panel stats">
+    <h2>实时统计</h2>
+    <div class="stat-grid">
+      <div class="stat"><span id="statSent">0</span><label>已发请求</label></div>
+      <div class="stat ok"><span id="statOk">0</span><label>成功</label></div>
+      <div class="stat fail"><span id="statFail">0</span><label>失败/超时</label></div>
+      <div class="stat rejected"><span id="statRejected">0</span><label>熔断拒绝</label></div>
+      <div class="stat"><span id="statRetries">0</span><label>重试次数</label></div>
+      <div class="stat wide"><span id="statLastBackoff">—</span><label>最近退避公式</label></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>请求时间轴（顶部色带 = 熔断器状态；虚线 = 退避间隔；✕ = 熔断拒绝未发请求）</h2>
+    <canvas id="timeline" class="canvas-timeline"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>熔断器状态机</h2>
+    <canvas id="stateMachine" class="canvas-sm"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>事件日志</h2>
+    <div id="log" class="log"></div>
+  </section>
+</main>
+
+<div id="toasts" class="toasts"></div>
+<script src="js/main.js"></script>
+</body>
+</html>
