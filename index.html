@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>重试 · 退避 · 熔断 · 半开可视化</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Fetch / Web Worker / Canvas</p>
+        <h1>弹性请求与熔断器实时可视化</h1>
+        <p>在 Worker 中执行网络请求、指数退避重试和熔断状态机，Canvas 实时绘制状态迁移与请求时间线。</p>
+      </div>
+      <div class="state-card" id="stateCard">
+        <span class="state-label">当前状态</span>
+        <strong id="stateName">CLOSED</strong>
+        <small id="stateMeta">失败 0 / 4</small>
+      </div>
+    </header>
+
+    <section class="panel controls" aria-label="控制面板">
+      <div class="button-row">
+        <button class="primary" id="requestBtn">发起请求</button>
+        <button id="burstBtn">并发 5 个请求</button>
+        <button class="ghost" id="resetBtn">重置熔断器</button>
+      </div>
+      <div class="mode-row">
+        <span>故障接口：</span>
+        <button data-mode="success">成功</button>
+        <button data-mode="flaky">间歇失败</button>
+        <button data-mode="fail" class="active">持续失败</button>
+        <button data-mode="timeout">超时</button>
+      </div>
+      <form id="configForm" class="config-grid">
+        <label>最大重试
+          <input type="number" id="maxRetries" min="0" max="10" value="3">
+        </label>
+        <label>基础退避(ms)
+          <input type="number" id="baseDelayMs" min="50" step="50" value="300">
+        </label>
+        <label>最大退避(ms)
+          <input type="number" id="maxDelayMs" min="100" step="100" value="2400">
+        </label>
+        <label>失败阈值
+          <input type="number" id="failureThreshold" min="1" max="20" value="4">
+        </label>
+        <label>打开时长(ms)
+          <input type="number" id="openDurationMs" min="1000" step="500" value="5000">
+        </label>
+        <label>请求超时(ms)
+          <input type="number" id="timeoutMs" min="500" step="100" value="3000">
+        </label>
+        <button type="submit" class="config-save">应用配置</button>
+      </form>
+    </section>
+
+    <section class="metrics" aria-label="关键指标">
+      <article><span>逻辑请求</span><strong id="metricRequests">0</strong></article>
+      <article><span>实际 Fetch</span><strong id="metricFetches">0</strong></article>
+      <article><span>重试</span><strong id="metricRetries">0</strong></article>
+      <article><span>成功</span><strong id="metricSuccesses">0</strong></article>
+      <article><span>失败</span><strong id="metricFailures">0</strong></article>
+      <article><span>熔断拒绝</span><strong id="metricRejected">0</strong></article>
+      <article><span>服务端收到</span><strong id="serverRequests">-</strong></article>
+    </section>
+
+    <section class="panel canvas-panel">
+      <div class="panel-title">
+        <h2>熔断状态机与请求时间线</h2>
+        <p>灰色等待是退避；打开状态的新逻辑请求不会产生 Fetch；冷却后只放行一个半开探测。</p>
+      </div>
+      <canvas id="vizCanvas" aria-label="熔断状态机与请求时间线"></canvas>
+    </section>
+
+    <section class="panel logs-panel">
+      <div class="panel-title">
+        <h2>事件日志</h2>
+        <p>保留最近 18 条 Worker 事件。</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>时间</th><th>请求</th><th>事件</th><th>详情</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <script src="./timeline.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

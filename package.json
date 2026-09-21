@@ -1,0 +1,13 @@
+{
+  "name": "resilience-fetch-worker-canvas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fetch + Web Worker retry, backoff, circuit breaker, half-open recovery and Canvas visualization demo.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/breaker.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
